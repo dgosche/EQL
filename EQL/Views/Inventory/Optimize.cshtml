@@ -1,0 +1,106 @@
+@model EQL.Controllers.OptimizeViewModel
+@using EQL.Services
+@{
+    ViewData["Title"] = "Optimize " + Model.Character;
+    int max = GameRules.MaxTier;
+    string Fmt(double? v) => v is null ? "" : v.Value.ToString("0");
+}
+<h1>Best gear for @Model.Character</h1>
+<p class="text-muted">@string.Join(" / ", Model.ClassCodes.Select(GameRules.ClassName))</p>
+
+<form asp-action="Optimize" method="post" class="card card-body mb-4">
+    <input type="hidden" name="character" value="@Model.Character" />
+    <div class="row g-2 align-items-end mb-2">
+        @for (int n = 0; n < 3; n++)
+        {
+            string current = n < Model.ClassCodes.Count ? Model.ClassCodes[n] : "";
+            <div class="col-sm-3">
+                <label class="form-label" for="class@(n)">@(n == 0 ? "Primary class" : n == 1 ? "Second class" : "Third class")</label>
+                <select class="form-select" id="class@(n)" name="classCodes"
+                        onchange="this.form.insertAdjacentHTML('beforeend','<input type=hidden name=resetWeights value=1>'); this.form.submit();">
+                    @if (n > 0)
+                    {
+                        <option value="" selected="@(current == "")">(none)</option>
+                    }
+                    @foreach (var (code, name) in GameRules.Classes)
+                    {
+                        <option value="@code" selected="@(code == current)">@name</option>
+                    }
+                </select>
+            </div>
+        }
+        <div class="col-sm-3 small text-muted">
+            Items any of these classes can use are included. Changing a class reloads the combined default weights
+            (the highest weight any of the classes gives each stat).
+        </div>
+    </div>
+    <div class="row g-2">
+        @foreach (var key in GameRules.WeightKeys)
+        {
+            <div class="col-4 col-md-2">
+                <label class="form-label small mb-0" for="w_@key">@key</label>
+                <input class="form-control form-control-sm" id="w_@key" name="weights[@key]" type="number" step="0.1"
+                       value="@Model.Weights[key].ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+            </div>
+        }
+    </div>
+    <div class="mt-3"><button class="btn btn-primary" type="submit">Recalculate</button></div>
+</form>
+
+<p class="small text-muted">
+    Score = sum of (stat × weight), with stats scaled to the item's tier. Weapon slots also add
+    WeaponRatio × 10 × damage ÷ delay. "Best obtainable" looks at every item in the database these classes can use,
+    so it includes raid drops. The two Any slots take the best leftover items of any type, scored on stats only.
+    Haste only counts once (the highest haste item), so an item's score includes only the haste it adds over what's already equipped.
+</p>
+
+<div class="table-responsive">
+<table class="table table-sm align-middle">
+    <thead>
+        <tr>
+            <th>Slot</th>
+            <th>Best owned</th><th class="text-end">Score</th><th class="text-end">At +@max</th>
+            <th>Best obtainable</th><th class="text-end">Score</th><th class="text-end">At +@max</th>
+            <th class="text-end">Gain</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var r in Model.Results)
+    {
+        double gain = (r.Best?.Score ?? 0) - (r.Owned?.Score ?? 0);
+        <tr>
+            <td>@r.Slot</td>
+            <td>
+                @if (r.Owned is not null)
+                {
+                    <a asp-controller="Items" asp-action="Details" asp-route-id="@r.Owned.Item.Id">@r.Owned.Item.Name</a>
+                    @if (r.Owned.Tier > 0) { <span class="badge bg-secondary">+@r.Owned.Tier</span> }
+                }
+                else { <span class="text-muted">—</span> }
+            </td>
+            <td class="text-end">@Fmt(r.Owned?.Score)</td>
+            <td class="text-end">@Fmt(r.OwnedAtMax)</td>
+            <td>
+                @if (r.Best is not null) { <a asp-controller="Items" asp-action="Details" asp-route-id="@r.Best.Item.Id">@r.Best.Item.Name</a> }
+                else { <span class="text-muted">—</span> }
+            </td>
+            <td class="text-end">@Fmt(r.Best?.Score)</td>
+            <td class="text-end">@Fmt(r.BestAtMax)</td>
+            <td class="text-end @(gain > 0 ? "text-success" : "")">@(gain > 0 ? "+" + gain.ToString("0") : "")</td>
+        </tr>
+    }
+    </tbody>
+    <tfoot>
+        <tr class="fw-bold">
+            <td>Total</td><td></td>
+            <td class="text-end">@Fmt(Model.Results.Sum(r => r.Owned?.Score ?? 0))</td>
+            <td class="text-end">@Fmt(Model.Results.Sum(r => r.OwnedAtMax ?? 0))</td>
+            <td></td>
+            <td class="text-end">@Fmt(Model.Results.Sum(r => r.Best?.Score ?? 0))</td>
+            <td class="text-end">@Fmt(Model.Results.Sum(r => r.BestAtMax ?? 0))</td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+</div>
+<a asp-action="Details" asp-route-character="@Model.Character">Back to inventory</a>

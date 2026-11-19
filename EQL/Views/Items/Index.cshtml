@@ -1,0 +1,65 @@
+@model List<Item>
+@{
+    ViewData["Title"] = "Items";
+    int total = ViewBag.Total, pageNo = ViewBag.Page, pageSize = ViewBag.PageSize, itemCount = ViewBag.ItemCount;
+    int pages = Math.Max(1, (total + pageSize - 1) / pageSize);
+    string? q = ViewBag.Q, slot = ViewBag.Slot;
+}
+<h1>Items</h1>
+<partial name="_Messages" />
+
+@if (itemCount == 0)
+{
+    <div class="alert alert-info">
+        The database has no items yet. <a asp-action="Import">Load items.csv</a> first.
+    </div>
+}
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-5"><input class="form-control" name="q" value="@q" placeholder="Name contains…" /></div>
+    <div class="col-sm-3">
+        <select class="form-select" name="slot">
+            <option value="">Any slot</option>
+            @foreach (var t in EQL.Services.GameRules.EquipSlots.Select(s => s.Token).Where(t => t != EQL.Services.GameRules.AnyToken).Distinct())
+            {
+                <option value="@t" selected="@(string.Equals(slot, t, StringComparison.OrdinalIgnoreCase))">@t</option>
+            }
+        </select>
+    </div>
+    <div class="col-sm-2"><button class="btn btn-primary w-100">Search</button></div>
+</form>
+
+<p class="text-muted">@total.ToString("N0") matching items</p>
+
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+    <thead>
+        <tr><th>Name</th><th>Slot</th><th>Class</th><th>AC</th><th>HP</th><th>Mana</th>
+            <th>STR</th><th>STA</th><th>AGI</th><th>DEX</th><th>WIS</th><th>INT</th><th>CHA</th><th>Dmg/Dly</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var i in Model)
+    {
+        <tr>
+            <td><a asp-action="Details" asp-route-id="@i.Id">@i.Name</a></td>
+            <td>@i.Slot</td><td class="small">@i.Class</td>
+            <td>@i.AC</td><td>@i.HP</td><td>@i.Mana</td>
+            <td>@i.Str</td><td>@i.Sta</td><td>@i.Agi</td><td>@i.Dex</td><td>@i.Wis</td><td>@i.Int</td><td>@i.Cha</td>
+            <td>@(i.Dmg is null ? "" : $"{i.Dmg}/{i.Delay}")</td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>
+
+<nav>
+    <ul class="pagination">
+        <li class="page-item @(pageNo <= 1 ? "disabled" : "")">
+            <a class="page-link" asp-route-q="@q" asp-route-slot="@slot" asp-route-page="@(pageNo - 1)">Previous</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">Page @pageNo of @pages</span></li>
+        <li class="page-item @(pageNo >= pages ? "disabled" : "")">
+            <a class="page-link" asp-route-q="@q" asp-route-slot="@slot" asp-route-page="@(pageNo + 1)">Next</a>
+        </li>
+    </ul>
+</nav>

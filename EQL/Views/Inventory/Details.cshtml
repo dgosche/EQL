@@ -1,0 +1,37 @@
+@model List<InventoryEntry>
+@{
+    string character = ViewBag.Character;
+    ViewData["Title"] = character + "'s inventory";
+    int unmatched = Model.Count(e => e.ItemId == null);
+}
+<h1>@character's inventory</h1>
+<partial name="_Messages" />
+
+<p>
+    @Model.Count lines, @(Model.Count - unmatched) matched, @unmatched not found in the item database.
+    <a class="btn btn-sm btn-primary ms-2" asp-action="Optimize" asp-route-character="@character">Optimize gear</a>
+</p>
+
+<div class="table-responsive">
+<table class="table table-sm align-middle">
+    <thead><tr><th>Location</th><th>Name in file</th><th>Tier</th><th>Count</th><th>Matched item</th><th>Slot</th><th>Class</th></tr></thead>
+    <tbody>
+    @foreach (var e in Model)
+    {
+        <tr class="@(e.ItemId == null ? "table-warning" : "")">
+            <td>@e.Location</td>
+            <td>@e.RawName</td>
+            <td>@(e.Tier > 0 ? "+" + e.Tier : "")</td>
+            <td>@e.Count</td>
+            <td>
+                @if (e.Item is not null) { <a asp-controller="Items" asp-action="Details" asp-route-id="@e.Item.Id">@e.Item.Name</a> }
+                else { <span class="text-muted">not found</span> }
+            </td>
+            <td>@e.Item?.Slot</td>
+            <td class="small">@e.Item?.Class</td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>
+<a asp-action="Index">Back to inventories</a>

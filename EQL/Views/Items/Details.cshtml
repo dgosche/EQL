@@ -1,0 +1,43 @@
+@model Item
+@using EQL.Services
+@{
+    ViewData["Title"] = Model.Name;
+    var stats = new (string Label, int? Value)[]
+    {
+        ("AC", Model.AC), ("HP", Model.HP), ("Mana", Model.Mana), ("End", Model.End),
+        ("STR", Model.Str), ("STA", Model.Sta), ("AGI", Model.Agi), ("DEX", Model.Dex),
+        ("WIS", Model.Wis), ("INT", Model.Int), ("CHA", Model.Cha),
+        ("SV Magic", Model.SvMagic), ("SV Fire", Model.SvFire), ("SV Cold", Model.SvCold),
+        ("SV Poison", Model.SvPoison), ("SV Disease", Model.SvDisease),
+    }.Where(s => s.Value is not null && s.Value != 0).ToList();
+    int max = GameRules.MaxTier;
+}
+<h1>@Model.Name</h1>
+<p>
+    <strong>Slot:</strong> @Model.Slot &nbsp; <strong>Class:</strong> @Model.Class &nbsp; <strong>Race:</strong> @Model.Race
+    @if (!string.IsNullOrEmpty(Model.Flags)) { <br /><span class="text-muted">@Model.Flags</span> }
+    @if (!string.IsNullOrEmpty(Model.Effect)) { <br /><span><strong>Effect:</strong> @Model.Effect</span> }
+    @if (Model.Haste is not null) { <br /><span><strong>Haste:</strong> @(Model.Haste)%</span> }
+    @if (Model.Weight is not null) { <br /><span><strong>Weight:</strong> @Model.Weight</span> }
+</p>
+
+<h2 class="h5">Stats by upgrade tier</h2>
+<p class="text-muted small">Each tier adds a cumulative +10% (rounded down, at least +1 per tier). Weapon damage adds +5% per tier.</p>
+<div class="table-responsive">
+<table class="table table-sm table-bordered text-center">
+    <thead>
+        <tr><th class="text-start">Stat</th>@for (int t = 0; t <= max; t++) { <th>+@t</th> }</tr>
+    </thead>
+    <tbody>
+    @foreach (var s in stats)
+    {
+        <tr><td class="text-start">@s.Label</td>@for (int t = 0; t <= max; t++) { <td>@GameRules.StatAtTier(s.Value, t)</td> }</tr>
+    }
+    @if (Model.Dmg is > 0)
+    {
+        <tr><td class="text-start">Damage (delay @Model.Delay)</td>@for (int t = 0; t <= max; t++) { <td>@GameRules.DamageAtTier(Model.Dmg, t)</td> }</tr>
+    }
+    </tbody>
+</table>
+</div>
+<a asp-action="Index">Back to items</a>

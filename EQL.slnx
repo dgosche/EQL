@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="EQL.Console/EQL.Console.csproj" />
+  <Project Path="EQL/EQL.Web.csproj" />
+</Solution>

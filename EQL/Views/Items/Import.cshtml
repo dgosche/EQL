@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Load items";
+    int count = ViewBag.ItemCount;
+}
+<h1>Load items</h1>
+<partial name="_Messages" />
+
+<p>
+    Upload the <code>items.csv</code> made by <strong>EQL.Console</strong>
+    (it's in <code>EQL.Console\bin\Debug\net10.0\</code> after a run).
+    Loading replaces every item already in the database.
+    Inventories you've uploaded are kept and matched again.
+</p>
+<p class="text-muted">Items in the database now: @count.ToString("N0")</p>
+
+<form asp-action="Import" method="post" enctype="multipart/form-data" class="card card-body" style="max-width: 36rem">
+    <div class="mb-3">
+        <label class="form-label" for="file">items.csv</label>
+        <input class="form-control" type="file" id="file" name="file" accept=".csv" required />
+    </div>
+    <button class="btn btn-primary" type="submit">Load into database</button>
+</form>

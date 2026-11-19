@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">EverQuest Legends Gear Optimizer</h1>
+    <p class="lead">Load the item database, upload a character's inventory, and see the best gear for each slot.</p>
+    <div class="d-flex justify-content-center gap-2 mt-4">
+        <a class="btn btn-outline-primary" asp-controller="Items" asp-action="Import">1. Load items.csv</a>
+        <a class="btn btn-outline-primary" asp-controller="Inventory" asp-action="Index">2. Upload an inventory</a>
+        <a class="btn btn-outline-primary" asp-controller="Items" asp-action="Index">Browse items</a>
+    </div>
+</div>

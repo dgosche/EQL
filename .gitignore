@@ -1,0 +1,22 @@
+# Visual Studio / .NET build output
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.rsuser
+
+# Local test database (rebuilt by loading items.csv on the Items > Load page)
+EQL/App_Data/*.db
+EQL/App_Data/*.db-shm
+EQL/App_Data/*.db-wal
+
+# Backups made before adding the database code
+_backup_before_db/
+
+# Generated item data (re-create with EQL.Console)
+*.csv
+
+# Secrets: keep real connection strings out of the repo
+appsettings.*.local.json
+.env
